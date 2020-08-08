@@ -35,7 +35,7 @@ def write_file(filename: str, content: str) -> None:
 
 
 def get_location(entry: dict) -> (float, float):
-    location = entry['location']
+    location = entry.get('location', {'longitude': 0.0, 'latitude': 0.0})
     return location['longitude'], location['latitude']
 
 
