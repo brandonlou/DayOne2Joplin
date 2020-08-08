@@ -1,52 +1,67 @@
 #!/usr/local/bin/python3
 
-import json, os, pathlib, sys, tarfile, textwrap, uuid
+import json, os, pathlib, sys, textwrap, uuid
 
 # Check for less than two arguments passed.
-if len(sys.argv) < 2:
-    print("Usage: python3 dayone2joplin.py [source dir]")
-    exit()
+def check_arguments() -> None:
+    if len(sys.argv) < 3:
+        print("Usage: python3 dayone2joplin.py [source dir] [target dir]")
+        exit()
 
-# Get current working directory.
-cwd = os.getcwd()
 
-# First argument is source directory relative to cwd.
-source_dir = sys.argv[1]
-source_json = cwd + "/" + source_dir + "/Journal.json"
+def get_source_json() -> str:
+    cwd = os.getcwd() # Get current working directory.
+    source_dir = sys.argv[1] # Use first argument.
+    return cwd + "/" + source_dir + "/Journal.json"
 
-# Create target directory if it does not exist.
-target_dir = cwd + "/Import/"
-pathlib.Path(target_dir).mkdir(parents=True, exist_ok=True)
 
-# Generate parent UUID.
-parent_id = str(uuid.uuid4())
-parent_id = parent_id.replace("-", "") # Remove dashes.
+def get_target_dir() -> str:
+    cwd = os.getcwd() # Get current working directory.
+    target_dir = cwd + "/" + sys.argv[2] + "/" # Use second argument.
+    pathlib.Path(target_dir).mkdir(parents=True, exist_ok=True) # Create directory if it doesn't exist.
+    return target_dir
 
-with open(source_json) as json_file:
-    data = json.load(json_file)
-    for entry in data['entries']: # Go through all journal entries.
 
-        # Get location.
-        location = entry['location']
-        longitude = location['longitude']
-        latitude = location['latitude']
+def generate_uuid() -> str:
+    new_uuid = str(uuid.uuid4())
+    new_uuid = new_uuid.replace("-", "") # Remove dashes
+    return new_uuid
 
-        # Get dates.
-        creation_date = entry['creationDate']
-        modified_date = entry['modifiedDate']
 
-        # Get ID.
-        self_id = entry['uuid'].lower()
+def write_file(filename: str, content: str) -> None:
+    new_file = open(filename, "w+")
+    new_file.write(content)
+    new_file.close()
 
-        # Get text content.
-        text = entry['text']
-        text = text.replace("\\", "") # Remove all single backslashes displayed.
-        title = text.partition('\n')[0] # Get the first line as the title.
-        title = title.replace("#", "").lstrip() # Remove all pound signs and leading whitespace.
-        text = title + "\n\n" + text # Prepend title to text.
 
-        # Create meta-information.
-        metainfo = """\n
+def get_location(entry: dict) -> (float, float):
+    location = entry['location']
+    return location['longitude'], location['latitude']
+
+
+def get_dates(entry: dict) -> (str, str):
+    return entry['creationDate'], entry['modifiedDate']
+
+
+def get_self_uuid(entry: dict) -> str:
+    return entry['uuid'].lower()
+
+
+def get_content(entry: dict) -> str:
+    content = entry['text']
+    content = content.replace("\\", "") # Remove all single backslashes displayed.
+    return content
+
+
+def get_title(text: str) -> str:
+    title = text.partition('\n')[0] # Get the first line as the title.
+    title = title.replace("#", "").lstrip() # Remove all pound signs and leading whitespace.
+    title += "\n\n"
+    return title
+
+
+def get_metainfo(self_id: str, parent_id: str, latitude: float, longitude: float, creation_date: str, modified_date: str) -> str:
+    metainfo = """\n
         id: {self_id}
         parent_id: {parent_id}
         created_time: {creation_date}
@@ -71,20 +86,42 @@ with open(source_json) as json_file:
         markup_language: 1
         is_shared: 0
         type_: 1""".format(self_id=self_id, parent_id=parent_id, creation_date=creation_date, modified_date=modified_date, longitude=longitude, latitude=latitude)
-        metainfo = textwrap.dedent(metainfo) # Remove added indentation from multiline string.
+        
+    metainfo = textwrap.dedent(metainfo) # Remove added indentation from multiline string.
+    return metainfo
 
-        # Append meta-information to content text.
-        text += metainfo
 
-        # Write to new markdown file.
-        new_md_name = target_dir + self_id + ".md"
-        new_md = open(new_md_name, "w+")
-        new_md.write(text)
-        new_md.close()
+def convert_to_markdown(entry: dict, target_dir: str, parent_id: str) -> None:
+    longitude, latitude = get_location(entry) # Get location.
+    creation_date, modified_date = get_dates(entry) # Get dates.
+    self_id = get_self_uuid(entry) # Get ID.
+    text = get_content(entry) # Get text content.
+    title = get_title(text) # Get title.
+    metainfo = get_metainfo(self_id, parent_id, latitude, longitude, creation_date, modified_date) # Get metainfo
+    text = title + text + metainfo # Prepend title and append metainfo to text
 
-# Create resources folder.
-# Future: Enable automatic convertion of images.
-resource_dir = target_dir + "resources"
-pathlib.Path(resource_dir).mkdir(parents=True, exist_ok=True)
+    # Write to new markdown file.
+    new_md = target_dir + self_id + ".md"
+    write_file(new_md, text)
 
-print("Success!")
+
+if __name__ == '__main__':
+    check_arguments()
+    source_json = get_source_json()
+    target_dir = get_target_dir()
+
+    # Generate parent UUID.
+    parent_id = generate_uuid()
+
+    # Open and load Journal.json.
+    with open(source_json) as json_file:
+        data = json.load(json_file)
+        for entry in data['entries']: # Go through all journal entries.
+            convert_to_markdown(entry, target_dir, parent_id)
+
+    # Create resources folder.
+    # Future: Enable automatic convertion of images.
+    resource_dir = target_dir + "resources"
+    pathlib.Path(resource_dir).mkdir(parents=True, exist_ok=True)
+
+    print("Success!")
