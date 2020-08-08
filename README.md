@@ -13,6 +13,16 @@
 ### Using the script
 0. Requirements: `python3`
 1. Clone this repository: `https://github.com/brandonlou/DayOne2Joplin.git`
-2. 
+2. `cd DayOne2Joplin`
+3. Move `from_dayone` into the cloned repository.
+4. Run `python3 dayone2joplin.py from_dayone to_joplin`.This creates a new directory inside the current directory named `to_joplin`.
 
 ### Importing into Joplin
+1. Open Joplin.
+2. Click `File -> Export -> RAW - Joplin Export Directory`.
+3. Open the `to_joplin` directory.
+4. Joplin will create a new notebook called `Imported` containing all of your imported notes!
+
+## Additional Information
+* All text formatting including bold, italics, headers, bulleted lists, etc. should be preserved.
+* Currently, images will not be converted. Images will have to be manually copy and pasted from Day One into Joplin. Please reach out if there is interest in this functionality and I will look into implementing it.
