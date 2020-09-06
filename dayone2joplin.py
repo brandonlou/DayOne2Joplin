@@ -1,6 +1,6 @@
 #!/usr/local/bin/python3
 
-import json, os, pathlib, sys, textwrap, uuid
+import datetime, json, os, pathlib, sys, textwrap, uuid
 
 # Check for less than two arguments passed.
 def check_arguments() -> None:
@@ -40,16 +40,21 @@ def get_location(entry: dict) -> (float, float):
 
 
 def get_dates(entry: dict) -> (str, str):
-    return entry['creationDate'], entry['modifiedDate']
+    current_date = datetime.datetime.now() # Get current date and time.
+    creation_date = entry.get('creationDate', current_date)
+    modified_date = entry.get('modifiedDate', current_date)
+    return creation_date, modified_date
 
 
 def get_self_uuid(entry: dict) -> str:
-    return entry['uuid'].lower()
+    default_uuid = generate_uuid()
+    uuid = entry.get('uuid', default_uuid).lower()
+    return uuid
 
 
 def get_content(entry: dict) -> str:
-    content = entry['text']
-    content = content.replace("\\", "") # Remove all single backslashes displayed.
+    content = entry.get('text', "") # Set entry contents to empty string if not available.
+    content = content.replace("\\", "") # Remove all single backslashes displayed.        
     return content
 
 
@@ -116,7 +121,12 @@ if __name__ == '__main__':
     # Open and load Journal.json.
     with open(source_json) as json_file:
         data = json.load(json_file)
-        for entry in data['entries']: # Go through all journal entries.
+        entries = data.get('entries')
+
+        if not entries:
+            sys.exit("Error: No entries found in Journal.json")
+
+        for entry in entries: # Go through all journal entries.
             convert_to_markdown(entry, target_dir, parent_id)
 
     # Create resources folder.
