@@ -20,7 +20,7 @@
 
 ### Importing into Joplin
 1. Open Joplin.
-2. Click `File -> Export -> RAW - Joplin Export Directory`.
+2. Click `File -> Import -> RAW - Joplin Export Directory`.
 3. Open the `to_joplin` directory.
 4. Joplin will create a new notebook called `Imported` containing all of your imported notes!
 
