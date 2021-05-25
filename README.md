@@ -8,7 +8,8 @@
 1. Open Day One.
 2. Select the notes you wish to transfer. Click [here](https://help.dayoneapp.com/en/articles/440668-exporting-entries) for official documentation on exporting entries. Export in `JSON` format.
 3. Unzip the downloaded `.zip` file.
-4. If your notes contain images, the `.zip` file will contain a directory of the same name. Rename this directory to `from_dayone`. If your notes do not contain images, there will only be a `Journal.json` file. Create a new directory named `from_dayone` and move `Journal.json` into it.
+4. If your notes contain images, the `.zip` file will contain a directory of the same name. Rename this directory to `from_dayone`. If your notes do not contain images, there will only be a `Journal.json` file. If you are using Day One in a different language, this file will have a different name. In this case, rename it to `Journal.json`.
+5. Create a new directory named `from_dayone` and move `Journal.json` into it.
 
 ### Using the script
 0. Requirements: `python3`
